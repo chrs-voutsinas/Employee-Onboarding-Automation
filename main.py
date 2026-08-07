@@ -1,15 +1,15 @@
 from playwright.sync_api import sync_playwright
+from pages.login_page import LoginPage
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=False)
 
     page = browser.new_page()
 
-    page.goto("https://www.wikipedia.org")
+    login = LoginPage(page)
 
-    search_box = page.locator("input[name='search']")
+    login.open()
 
-    search_box.fill("Playwright")
-    search_box.press("Enter")
-    
+    login.login("Admin", "admin123")
+
     input("Πάτησε Enter για να κλείσει...")
