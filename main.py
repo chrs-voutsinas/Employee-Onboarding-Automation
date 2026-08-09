@@ -2,6 +2,7 @@ import os
 import logging
 
 from datetime import datetime
+from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 
 from pages.login_page import LoginPage
@@ -9,6 +10,28 @@ from pages.pim_page import PIMPage
 from utils.csv_reader import read_employees
 from utils.report_writer import write_report
 from utils.logger import setup_logger
+
+from config.settings import (
+    INPUT_FILE,
+    TEST_FAILURE,
+    HEADLESS
+)
+
+
+# Load environment variables from .env
+load_dotenv()
+
+
+# Read credentials from environment variables
+USERNAME = os.getenv("ORANGEHRM_USERNAME")
+PASSWORD = os.getenv("ORANGEHRM_PASSWORD")
+
+
+# Validate credentials
+if not USERNAME or not PASSWORD:
+    raise ValueError(
+        "Missing ORANGEHRM_USERNAME or ORANGEHRM_PASSWORD in .env"
+    )
 
 
 # Create runtime folders if they do not already exist
@@ -36,11 +59,8 @@ logging.info("=" * 60)
 logging.info("Automation started")
 
 
-# Set to True only when we want to demonstrate failure handling
-TEST_FAILURE = False
-
-
-employees = read_employees("input/employees.csv")
+# Read employees from CSV
+employees = read_employees(INPUT_FILE)
 
 print(employees)
 
@@ -48,12 +68,12 @@ results = []
 
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=False)
+    browser = p.chromium.launch(headless=HEADLESS)
     page = browser.new_page()
 
     login = LoginPage(page)
     login.open()
-    login.login("Admin", "admin123")
+    login.login(USERNAME, PASSWORD)
 
     logging.info("Login successful")
 
