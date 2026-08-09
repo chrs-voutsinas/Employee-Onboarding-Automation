@@ -1,17 +1,39 @@
 import os
+import logging
 
+from datetime import datetime
 from playwright.sync_api import sync_playwright
 
 from pages.login_page import LoginPage
 from pages.pim_page import PIMPage
 from utils.csv_reader import read_employees
 from utils.report_writer import write_report
+from utils.logger import setup_logger
 
 
 # Create runtime folders if they do not already exist
 os.makedirs("output", exist_ok=True)
 os.makedirs("screenshots", exist_ok=True)
 os.makedirs("logs", exist_ok=True)
+
+
+# Create a unique Run ID
+run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+# Setup logging for this specific run
+setup_logger(run_id)
+
+
+# Create a unique report path for this run
+report_path = f"output/employee_results_{run_id}.csv"
+
+
+# Log the beginning of the automation run
+logging.info("=" * 60)
+logging.info(f"RUN START - Run ID: {run_id}")
+logging.info("=" * 60)
+logging.info("Automation started")
 
 
 # Set to True only when we want to demonstrate failure handling
@@ -33,11 +55,18 @@ with sync_playwright() as p:
     login.open()
     login.login("Admin", "admin123")
 
+    logging.info("Login successful")
+
     pim_page = PIMPage(page)
 
     for employee in employees:
         try:
-            # Simulate a failure for demonstration/testing
+            logging.info(
+                f"Processing employee: "
+                f"{employee['first_name']} {employee['last_name']}"
+            )
+
+            # Simulate a failure only when TEST_FAILURE is enabled
             if TEST_FAILURE and employee["first_name"] == "Maria":
                 raise Exception("Test failure for Maria")
 
@@ -67,6 +96,11 @@ with sync_playwright() as p:
                     f"created successfully with ID: {employee_id}"
                 )
 
+                logging.info(
+                    f"Employee {full_name} created successfully "
+                    f"with ID: {employee_id}"
+                )
+
                 results.append({
                     "first_name": employee["first_name"],
                     "middle_name": employee["middle_name"],
@@ -79,6 +113,11 @@ with sync_playwright() as p:
 
             else:
                 print(
+                    f"Employee {full_name} "
+                    "creation validation failed"
+                )
+
+                logging.error(
                     f"Employee {full_name} "
                     "creation validation failed"
                 )
@@ -96,6 +135,7 @@ with sync_playwright() as p:
         except Exception as error:
             screenshot_path = (
                 f"screenshots/"
+                f"{run_id}_"
                 f"{employee['first_name']}_{employee['last_name']}_error.png"
             )
 
@@ -105,6 +145,12 @@ with sync_playwright() as p:
             )
 
             print(
+                f"Employee {employee['first_name']} "
+                f"{employee['last_name']} "
+                f"failed with error: {error}"
+            )
+
+            logging.error(
                 f"Employee {employee['first_name']} "
                 f"{employee['last_name']} "
                 f"failed with error: {error}"
@@ -122,9 +168,16 @@ with sync_playwright() as p:
 
     write_report(
         results,
-        "output/employee_results.csv"
+        report_path
     )
 
-    print("Report created: output/employee_results.csv")
+    print(f"Report created: {report_path}")
+
+    logging.info(f"Report created: {report_path}")
+    logging.info("Automation completed")
+
+    logging.info("=" * 60)
+    logging.info(f"RUN END - Run ID: {run_id}")
+    logging.info("=" * 60)
 
     input("Πάτησε Enter για να κλείσει...")
