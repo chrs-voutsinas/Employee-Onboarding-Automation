@@ -24,15 +24,16 @@ from config.settings import (
     TEST_RETRY,
     HEADLESS,
     MAX_RETRIES,
-    RETRY_DELAY
+    RETRY_DELAY,
+    PAUSE_BEFORE_EXIT
 )
 
 
-# Load environment variables from .env
+# Load environment variables
 load_dotenv()
 
 
-# Read credentials from environment variables
+# Read credentials
 USERNAME = os.getenv("ORANGEHRM_USERNAME")
 PASSWORD = os.getenv("ORANGEHRM_PASSWORD")
 
@@ -44,93 +45,126 @@ if not USERNAME or not PASSWORD:
     )
 
 
-# Create runtime folders if they do not already exist
+# Create runtime folders
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# Create a unique Run ID
+# Create unique Run ID
 run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-# Setup logging for this specific run
+# Setup logging
 setup_logger(run_id)
 
 
-# Create a unique report path for this run
+# Create report path
 report_path = OUTPUT_DIR / f"employee_results_{run_id}.csv"
 
 
-# Log the beginning of the automation run
-logging.info("=" * 60)
-logging.info(f"RUN START - Run ID: {run_id}")
-logging.info("=" * 60)
-logging.info("Automation started")
+def run_automation():
+    results = []
 
+    logging.info("=" * 60)
+    logging.info(f"RUN START - Run ID: {run_id}")
+    logging.info("=" * 60)
+    logging.info("Automation started")
 
-# Read and validate employees from CSV
-employees = read_employees(INPUT_FILE)
+    # Read and validate employees
+    employees = read_employees(INPUT_FILE)
 
-results = []
+    # Stop gracefully if the input file contains no employees
+    if not employees:
+        message = "No employees found in input file."
 
+        print(message)
+        logging.warning(message)
+        logging.info("Automation completed - no employees to process")
 
-# Start browser automation
-with sync_playwright() as p:
-    browser = p.chromium.launch(
-        headless=HEADLESS
-    )
+        return
 
-    page = browser.new_page()
-
-    # Login
-    login = LoginPage(page)
-    login.open()
-    login.login(
-        USERNAME,
-        PASSWORD
-    )
-
-    logging.info("Login successful")
-
-    # Initialize PIM page
-    pim_page = PIMPage(page)
-
-    # Process employees
-    for employee in employees:
-        result = process_employee(
-            employee=employee,
-            pim_page=pim_page,
-            page=page,
-            run_id=run_id,
-            screenshots_dir=SCREENSHOTS_DIR,
-            max_retries=MAX_RETRIES,
-            retry_delay=RETRY_DELAY,
-            test_failure=TEST_FAILURE,
-            test_retry=TEST_RETRY
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=HEADLESS
         )
 
-        results.append(result)
+        try:
+            page = browser.new_page()
 
-    # Create CSV report
-    write_report(
-        results,
-        report_path
-    )
+            # Login
+            login = LoginPage(page)
+            login.open()
+            login.login(
+                USERNAME,
+                PASSWORD
+            )
 
-    print(f"Report created: {report_path}")
-    logging.info(f"Report created: {report_path}")
+            logging.info("Login successful")
 
-    # Generate run summary
-    generate_run_summary(
-        results,
-        run_id
-    )
+            # Initialize PIM page
+            pim_page = PIMPage(page)
 
-    logging.info("Automation completed")
+            # Process employees
+            for employee in employees:
+                result = process_employee(
+                    employee=employee,
+                    pim_page=pim_page,
+                    page=page,
+                    run_id=run_id,
+                    screenshots_dir=SCREENSHOTS_DIR,
+                    max_retries=MAX_RETRIES,
+                    retry_delay=RETRY_DELAY,
+                    test_failure=TEST_FAILURE,
+                    test_retry=TEST_RETRY
+                )
 
-    logging.info("=" * 60)
-    logging.info(f"RUN END - Run ID: {run_id}")
-    logging.info("=" * 60)
+                results.append(result)
 
-    input("Πάτησε Enter για να κλείσει...")
+            # Create CSV report
+            write_report(
+                results,
+                report_path
+            )
+
+            print(f"Report created: {report_path}")
+
+            logging.info(
+                f"Report created: {report_path}"
+            )
+
+            # Generate run summary
+            generate_run_summary(
+                results,
+                run_id
+            )
+
+            logging.info("Automation completed")
+
+        finally:
+            browser.close()
+            logging.info("Browser closed")
+
+
+def main():
+    try:
+        run_automation()
+
+    except Exception as error:
+        print(f"Automation failed: {error}")
+
+        logging.exception(
+            f"Automation failed with unexpected error: {error}"
+        )
+
+    finally:
+        logging.info("=" * 60)
+        logging.info(f"RUN END - Run ID: {run_id}")
+        logging.info("=" * 60)
+
+        if PAUSE_BEFORE_EXIT:
+            input("Πάτησε Enter για να κλείσει...")
+
+
+if __name__ == "__main__":
+    main()
