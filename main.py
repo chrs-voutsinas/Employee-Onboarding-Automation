@@ -10,6 +10,7 @@ from pages.pim_page import PIMPage
 from utils.csv_reader import read_employees
 from utils.report_writer import write_report
 from utils.logger import setup_logger
+from utils.retry import retry_action
 
 from config.settings import (
     INPUT_FILE,
@@ -17,7 +18,10 @@ from config.settings import (
     SCREENSHOTS_DIR,
     LOGS_DIR,
     TEST_FAILURE,
-    HEADLESS
+    TEST_RETRY,
+    HEADLESS,
+    MAX_RETRIES,
+    RETRY_DELAY
 )
 
 
@@ -111,23 +115,6 @@ with sync_playwright() as p:
             continue
 
         try:
-            logging.info(
-                f"Processing employee: "
-                f"{employee['first_name']} {employee['last_name']}"
-            )
-
-            if TEST_FAILURE and employee["first_name"] == "Maria":
-                raise Exception("Test failure for Maria")
-
-            pim_page.open_pim()
-            pim_page.click_add_employee()
-
-            employee_id = pim_page.create_employee(
-                employee["first_name"],
-                employee["middle_name"],
-                employee["last_name"]
-            )
-
             full_name = " ".join(
                 part for part in [
                     employee["first_name"],
@@ -135,6 +122,45 @@ with sync_playwright() as p:
                     employee["last_name"]
                 ]
                 if part
+            )
+
+            logging.info(
+                f"Processing employee: {full_name}"
+            )
+
+            # Final failure demo
+            if TEST_FAILURE and employee["first_name"] == "Maria":
+                raise Exception("Test failure for Maria")
+
+            # Counter used only for retry demonstration
+            retry_test_attempts = {"count": 0}
+
+            def create_employee():
+                retry_test_attempts["count"] += 1
+
+                # Simulate a temporary failure only on Maria's first attempt
+                if (
+                    TEST_RETRY
+                    and employee["first_name"] == "Maria"
+                    and retry_test_attempts["count"] == 1
+                ):
+                    raise Exception(
+                        "Simulated temporary failure for retry test"
+                    )
+
+                pim_page.open_pim()
+                pim_page.click_add_employee()
+
+                return pim_page.create_employee(
+                    employee["first_name"],
+                    employee["middle_name"],
+                    employee["last_name"]
+                )
+
+            employee_id = retry_action(
+                create_employee,
+                MAX_RETRIES,
+                RETRY_DELAY
             )
 
             is_valid = pim_page.validate_employee_id(employee_id)

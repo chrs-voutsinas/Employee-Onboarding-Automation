@@ -10,7 +10,13 @@ BASE_URL = "https://opensource-demo.orangehrmlive.com/"
 USE_VALIDATION_TEST_INPUT = False
 USE_HEADER_TEST_INPUT = False
 TEST_FAILURE = False
+TEST_RETRY = False
 HEADLESS = False
+
+
+# Retry settings
+MAX_RETRIES = 2
+RETRY_DELAY = 2
 
 
 # Validate demo configuration
