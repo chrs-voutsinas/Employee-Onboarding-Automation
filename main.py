@@ -65,8 +65,6 @@ logging.info("Automation started")
 # Read employees from CSV
 employees = read_employees(INPUT_FILE)
 
-print(employees)
-
 results = []
 
 
@@ -224,6 +222,44 @@ with sync_playwright() as p:
     print(f"Report created: {report_path}")
 
     logging.info(f"Report created: {report_path}")
+
+    # Calculate run summary
+    total = len(results)
+
+    successful = sum(
+        1
+        for result in results
+        if result["status"] == "Success"
+    )
+
+    failed = total - successful
+
+    success_rate = (
+        (successful / total) * 100
+        if total > 0
+        else 0
+    )
+
+    # Print run summary
+    print("=" * 60)
+    print(f"RUN SUMMARY - {run_id}")
+    print("=" * 60)
+    print(f"Total Employees : {total}")
+    print(f"Successful      : {successful}")
+    print(f"Failed          : {failed}")
+    print(f"Success Rate    : {success_rate:.1f}%")
+    print("=" * 60)
+
+    # Log run summary
+    logging.info("=" * 60)
+    logging.info(f"RUN SUMMARY - {run_id}")
+    logging.info("=" * 60)
+    logging.info(f"Total Employees : {total}")
+    logging.info(f"Successful      : {successful}")
+    logging.info(f"Failed          : {failed}")
+    logging.info(f"Success Rate    : {success_rate:.1f}%")
+    logging.info("=" * 60)
+
     logging.info("Automation completed")
 
     logging.info("=" * 60)
