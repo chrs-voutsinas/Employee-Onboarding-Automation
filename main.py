@@ -13,6 +13,9 @@ from utils.logger import setup_logger
 
 from config.settings import (
     INPUT_FILE,
+    OUTPUT_DIR,
+    SCREENSHOTS_DIR,
+    LOGS_DIR,
     TEST_FAILURE,
     HEADLESS
 )
@@ -35,9 +38,9 @@ if not USERNAME or not PASSWORD:
 
 
 # Create runtime folders if they do not already exist
-os.makedirs("output", exist_ok=True)
-os.makedirs("screenshots", exist_ok=True)
-os.makedirs("logs", exist_ok=True)
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # Create a unique Run ID
@@ -49,7 +52,7 @@ setup_logger(run_id)
 
 
 # Create a unique report path for this run
-report_path = f"output/employee_results_{run_id}.csv"
+report_path = OUTPUT_DIR / f"employee_results_{run_id}.csv"
 
 
 # Log the beginning of the automation run
@@ -86,7 +89,6 @@ with sync_playwright() as p:
                 f"{employee['first_name']} {employee['last_name']}"
             )
 
-            # Simulate a failure only when TEST_FAILURE is enabled
             if TEST_FAILURE and employee["first_name"] == "Maria":
                 raise Exception("Test failure for Maria")
 
@@ -154,13 +156,12 @@ with sync_playwright() as p:
 
         except Exception as error:
             screenshot_path = (
-                f"screenshots/"
-                f"{run_id}_"
-                f"{employee['first_name']}_{employee['last_name']}_error.png"
+                SCREENSHOTS_DIR
+                / f"{run_id}_{employee['first_name']}_{employee['last_name']}_error.png"
             )
 
             page.screenshot(
-                path=screenshot_path,
+                path=str(screenshot_path),
                 full_page=True
             )
 
@@ -183,7 +184,7 @@ with sync_playwright() as p:
                 "employee_id": "",
                 "status": "Failed",
                 "error_message": str(error),
-                "screenshot_path": screenshot_path
+                "screenshot_path": str(screenshot_path)
             })
 
     write_report(
