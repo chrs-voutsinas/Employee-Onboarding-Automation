@@ -2,23 +2,25 @@
 
 Enterprise-style RPA automation project built with Python and Playwright.
 
-The automation reads employee data from a CSV file, logs into OrangeHRM, creates employees through the PIM module, validates the generated employee IDs, and produces run-specific reports, logs, and screenshots for failed transactions.
+The project automates employee creation in OrangeHRM using employee data from CSV input files.
 
 ## Features
 
-- Automated login to OrangeHRM
-- Employee data input from CSV
-- Employee creation through the PIM module
-- Employee ID validation
-- Success and failure handling per employee
-- CSV execution reports
-- Automatic screenshots on errors
-- Run-specific logging
-- Unique Run ID for each execution
+- Browser automation with Playwright
+- Page Object Model (POM)
 - Environment-based credential management
-- Centralized configuration
-- Headless browser support
-- Test failure mode for exception-handling demonstration
+- CSV input processing
+- Employee input validation
+- CSV header validation
+- Configurable test modes
+- Error handling
+- Automatic screenshots on failures
+- Retry mechanism for temporary failures
+- Execution logging
+- CSV result reports
+- Run summary metrics
+- Automated unit tests with pytest
+- Modular project architecture
 
 ## Project Structure
 
@@ -29,19 +31,35 @@ Employee Onboarding Automation/
 │   └── settings.py
 │
 ├── input/
-│   └── employees.csv
+│   ├── employees.csv
+│   ├── employees_validation_test.csv
+│   └── employees_header_test.csv
 │
 ├── logs/
 ├── output/
+│
 ├── pages/
 │   ├── login_page.py
 │   └── pim_page.py
 │
 ├── screenshots/
+│
+├── services/
+│   └── employee_processor.py
+│
+├── tests/
+│   ├── test_csv_reader.py
+│   ├── test_result_builder.py
+│   ├── test_retry.py
+│   └── test_run_summary.py
+│
 ├── utils/
 │   ├── csv_reader.py
 │   ├── logger.py
-│   └── report_writer.py
+│   ├── report_writer.py
+│   ├── result_builder.py
+│   ├── retry.py
+│   └── run_summary.py
 │
 ├── .env.example
 ├── .gitignore
@@ -52,13 +70,10 @@ Employee Onboarding Automation/
 
 ## Requirements
 
-- Python 3.12
+- Python 3.12+
 - Playwright
-- Chromium
-
-## Installation
-
-Clone the repository and open the project directory.
+- python-dotenv
+- pytest
 
 Install the required Python packages:
 
@@ -66,7 +81,7 @@ Install the required Python packages:
 pip install -r requirements.txt
 ```
 
-Install the Chromium browser used by Playwright:
+Install the Playwright browser:
 
 ```bash
 playwright install chromium
@@ -74,69 +89,26 @@ playwright install chromium
 
 ## Environment Variables
 
-Create a `.env` file in the project root based on `.env.example`.
+Credentials are not stored in the repository.
 
-Example:
+Create a `.env` file in the project root based on `.env.example`:
 
 ```env
 ORANGEHRM_USERNAME=your_username
 ORANGEHRM_PASSWORD=your_password
 ```
 
-The `.env` file contains credentials and is excluded from Git through `.gitignore`.
-
-## Configuration
-
-Application settings are stored in:
-
-```text
-config/settings.py
-```
-
-Available settings include:
-
-```python
-BASE_URL = "https://opensource-demo.orangehrmlive.com/"
-INPUT_FILE = "input/employees.csv"
-TEST_FAILURE = False
-HEADLESS = False
-```
-
-`TEST_FAILURE` can be enabled to demonstrate exception handling and screenshot creation.
-
-`HEADLESS` controls whether the Chromium browser is displayed during execution.
-
-## Running the Automation
-
-Run:
-
-```bash
-python main.py
-```
-
-Each execution generates a unique Run ID.
-
-The same Run ID is used to associate the execution artifacts:
-
-```text
-logs/automation_<RUN_ID>.log
-
-output/employee_results_<RUN_ID>.csv
-
-screenshots/<RUN_ID>_<EMPLOYEE>_error.png
-```
-
-Screenshots are generated only when an employee transaction fails.
+The `.env` file is excluded from Git through `.gitignore`.
 
 ## Input
 
-Employee data is read from:
+The default employee input file is:
 
 ```text
 input/employees.csv
 ```
 
-Example:
+Expected CSV structure:
 
 ```csv
 first_name,middle_name,last_name
@@ -145,21 +117,110 @@ Maria,Elena,Papadopoulou
 Alex,,Brown
 ```
 
+`first_name` and `last_name` are required fields.
+
+The automation validates both the CSV headers and employee data before browser processing.
+
+## Configuration
+
+Runtime and demo settings are managed through:
+
+```text
+config/settings.py
+```
+
+Available demo switches include:
+
+```python
+USE_VALIDATION_TEST_INPUT = False
+USE_HEADER_TEST_INPUT = False
+TEST_FAILURE = False
+TEST_RETRY = False
+HEADLESS = False
+```
+
+Retry behavior is configurable through:
+
+```python
+MAX_RETRIES = 2
+RETRY_DELAY = 2
+```
+
+## Running the Automation
+
+Run the automation from the project root:
+
+```bash
+python main.py
+```
+
+The automation will:
+
+1. Load configuration and credentials
+2. Read and validate employee input
+3. Launch the browser
+4. Log in to OrangeHRM
+5. Process each employee
+6. Retry temporary failures when applicable
+7. Capture screenshots for final failures
+8. Generate a CSV result report
+9. Generate run summary metrics
+10. Write execution details to the log
+
 ## Output
 
-For every employee, the automation records:
+Each automation run generates a timestamped CSV report inside:
 
-- First name
-- Middle name
-- Last name
-- Employee ID
-- Status
-- Error message
-- Screenshot path
+```text
+output/
+```
 
-A successful transaction contains the generated employee ID and a `Success` status.
+The report contains:
 
-A failed transaction contains a `Failed` status, the error message, and the path to the captured screenshot.
+```text
+first_name
+middle_name
+last_name
+employee_id
+status
+error_message
+screenshot_path
+```
+
+Failed browser-processing scenarios can also generate screenshots inside:
+
+```text
+screenshots/
+```
+
+Execution logs are stored inside:
+
+```text
+logs/
+```
+
+## Automated Testing
+
+The project uses `pytest` for automated unit testing.
+
+Run the complete test suite from the project root:
+
+```bash
+python -m pytest -v
+```
+
+The current automated tests cover:
+
+- Employee input validation
+- CSV header validation
+- Success and failure result creation
+- Retry success on the first attempt
+- Successful recovery after retries
+- Final failure after all retry attempts
+- Run summary calculations
+- Empty run summary handling
+
+The unit tests run independently of the browser, allowing core Python logic to be validated quickly without executing the full Playwright automation.
 
 ## Status
 

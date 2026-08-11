@@ -1,7 +1,7 @@
 import logging
 
 
-def generate_run_summary(results, run_id):
+def calculate_run_summary(results):
     total = len(results)
 
     successful = sum(
@@ -18,29 +18,37 @@ def generate_run_summary(results, run_id):
         else 0
     )
 
-    # Print summary to terminal
-    print("=" * 60)
-    print(f"RUN SUMMARY - {run_id}")
-    print("=" * 60)
-    print(f"Total Employees : {total}")
-    print(f"Successful      : {successful}")
-    print(f"Failed          : {failed}")
-    print(f"Success Rate    : {success_rate:.1f}%")
-    print("=" * 60)
-
-    # Write summary to log
-    logging.info("=" * 60)
-    logging.info(f"RUN SUMMARY - {run_id}")
-    logging.info("=" * 60)
-    logging.info(f"Total Employees : {total}")
-    logging.info(f"Successful      : {successful}")
-    logging.info(f"Failed          : {failed}")
-    logging.info(f"Success Rate    : {success_rate:.1f}%")
-    logging.info("=" * 60)
-
     return {
         "total": total,
         "successful": successful,
         "failed": failed,
         "success_rate": success_rate
     }
+
+
+def generate_run_summary(results, run_id):
+    summary = calculate_run_summary(results)
+
+    # Print summary to terminal
+    print("=" * 60)
+    print(f"RUN SUMMARY - {run_id}")
+    print("=" * 60)
+    print(f"Total Employees : {summary['total']}")
+    print(f"Successful      : {summary['successful']}")
+    print(f"Failed          : {summary['failed']}")
+    print(f"Success Rate    : {summary['success_rate']:.1f}%")
+    print("=" * 60)
+
+    # Write summary to log
+    logging.info("=" * 60)
+    logging.info(f"RUN SUMMARY - {run_id}")
+    logging.info("=" * 60)
+    logging.info(f"Total Employees : {summary['total']}")
+    logging.info(f"Successful      : {summary['successful']}")
+    logging.info(f"Failed          : {summary['failed']}")
+    logging.info(
+        f"Success Rate    : {summary['success_rate']:.1f}%"
+    )
+    logging.info("=" * 60)
+
+    return summary
