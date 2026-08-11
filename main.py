@@ -83,6 +83,35 @@ with sync_playwright() as p:
     pim_page = PIMPage(page)
 
     for employee in employees:
+
+        # Validate input data before browser processing
+        if not employee["is_valid"]:
+            validation_error = employee["validation_error"]
+
+            print(
+                f"Employee input validation failed: "
+                f"{validation_error}"
+            )
+
+            logging.error(
+                f"Employee input validation failed - "
+                f"{employee.get('first_name', '')} "
+                f"{employee.get('last_name', '')}: "
+                f"{validation_error}"
+            )
+
+            results.append({
+                "first_name": employee.get("first_name", ""),
+                "middle_name": employee.get("middle_name", ""),
+                "last_name": employee.get("last_name", ""),
+                "employee_id": "",
+                "status": "Failed",
+                "error_message": validation_error,
+                "screenshot_path": ""
+            })
+
+            continue
+
         try:
             logging.info(
                 f"Processing employee: "
