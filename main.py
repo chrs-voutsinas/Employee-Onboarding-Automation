@@ -9,6 +9,7 @@ from pages.login_page import LoginPage
 from pages.pim_page import PIMPage
 
 from services.employee_processor import process_employee
+from services.email_service import send_report_email
 
 from utils.csv_reader import read_employees
 from utils.report_writer import write_report
@@ -25,7 +26,9 @@ from config.settings import (
     HEADLESS,
     MAX_RETRIES,
     RETRY_DELAY,
-    PAUSE_BEFORE_EXIT
+    PAUSE_BEFORE_EXIT,
+    SEND_EMAIL_REPORT,
+    EMAIL_SUBJECT
 )
 
 
@@ -59,8 +62,8 @@ run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 setup_logger(run_id)
 
 
-# Create report path
-report_path = OUTPUT_DIR / f"employee_results_{run_id}.csv"
+# Create Excel report path
+report_path = OUTPUT_DIR / f"employee_results_{run_id}.xlsx"
 
 
 def run_automation():
@@ -80,7 +83,9 @@ def run_automation():
 
         print(message)
         logging.warning(message)
-        logging.info("Automation completed - no employees to process")
+        logging.info(
+            "Automation completed - no employees to process"
+        )
 
         return
 
@@ -121,13 +126,15 @@ def run_automation():
 
                 results.append(result)
 
-            # Create CSV report
+            # Create Excel report
             write_report(
                 results,
                 report_path
             )
 
-            print(f"Report created: {report_path}")
+            print(
+                f"Report created: {report_path}"
+            )
 
             logging.info(
                 f"Report created: {report_path}"
@@ -139,11 +146,47 @@ def run_automation():
                 run_id
             )
 
-            logging.info("Automation completed")
+            # Send email report
+            if SEND_EMAIL_REPORT:
+                try:
+                    send_report_email(
+                        results=results,
+                        report_path=report_path,
+                        subject=EMAIL_SUBJECT
+                    )
+
+                    print(
+                        "Report email sent successfully."
+                    )
+
+                    logging.info(
+                        "Report email sent successfully."
+                    )
+
+                except Exception as email_error:
+                    print(
+                        f"Email sending failed: {email_error}"
+                    )
+
+                    logging.exception(
+                        f"Email sending failed: {email_error}"
+                    )
+
+            else:
+                logging.info(
+                    "Email report sending is disabled."
+                )
+
+            logging.info(
+                "Automation completed"
+            )
 
         finally:
             browser.close()
-            logging.info("Browser closed")
+
+            logging.info(
+                "Browser closed"
+            )
 
 
 def main():
@@ -151,7 +194,9 @@ def main():
         run_automation()
 
     except Exception as error:
-        print(f"Automation failed: {error}")
+        print(
+            f"Automation failed: {error}"
+        )
 
         logging.exception(
             f"Automation failed with unexpected error: {error}"
@@ -159,11 +204,15 @@ def main():
 
     finally:
         logging.info("=" * 60)
-        logging.info(f"RUN END - Run ID: {run_id}")
+        logging.info(
+            f"RUN END - Run ID: {run_id}"
+        )
         logging.info("=" * 60)
 
         if PAUSE_BEFORE_EXIT:
-            input("Πάτησε Enter για να κλείσει...")
+            input(
+                "Πάτησε Enter για να κλείσει..."
+            )
 
 
 if __name__ == "__main__":

@@ -1,12 +1,19 @@
 from pathlib import Path
 
 
+# ============================================================
+# BASE CONFIGURATION
+# ============================================================
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 BASE_URL = "https://opensource-demo.orangehrmlive.com/"
 
 
-# Demo settings
+# ============================================================
+# DEMO SETTINGS
+# ============================================================
+
 USE_VALIDATION_TEST_INPUT = False
 USE_HEADER_TEST_INPUT = False
 USE_EMPTY_TEST_INPUT = False
@@ -18,12 +25,27 @@ HEADLESS = False
 PAUSE_BEFORE_EXIT = True
 
 
-# Retry settings
+# ============================================================
+# EMAIL REPORT SETTINGS
+# ============================================================
+
+SEND_EMAIL_REPORT = True
+
+EMAIL_SUBJECT = "Employee Onboarding Automation Report"
+
+
+# ============================================================
+# RETRY SETTINGS
+# ============================================================
+
 MAX_RETRIES = 2
 RETRY_DELAY = 2
 
 
-# Validate demo configuration
+# ============================================================
+# VALIDATE DEMO CONFIGURATION
+# ============================================================
+
 enabled_input_test_modes = sum([
     USE_VALIDATION_TEST_INPUT,
     USE_HEADER_TEST_INPUT,
@@ -36,7 +58,10 @@ if enabled_input_test_modes > 1:
     )
 
 
-# Input files
+# ============================================================
+# INPUT FILES
+# ============================================================
+
 DEFAULT_INPUT_FILE = (
     BASE_DIR / "input" / "employees.csv"
 )
@@ -54,21 +79,29 @@ EMPTY_TEST_INPUT_FILE = (
 )
 
 
-# Select input file
-if USE_HEADER_TEST_INPUT:
+# ============================================================
+# SELECT INPUT FILE
+# ============================================================
+
+if USE_EMPTY_TEST_INPUT:
+    INPUT_FILE = EMPTY_TEST_INPUT_FILE
+
+elif USE_HEADER_TEST_INPUT:
     INPUT_FILE = HEADER_TEST_INPUT_FILE
 
 elif USE_VALIDATION_TEST_INPUT:
     INPUT_FILE = VALIDATION_TEST_INPUT_FILE
 
-elif USE_EMPTY_TEST_INPUT:
-    INPUT_FILE = EMPTY_TEST_INPUT_FILE
-
 else:
     INPUT_FILE = DEFAULT_INPUT_FILE
 
 
-# Runtime directories
+# ============================================================
+# RUNTIME DIRECTORIES
+# ============================================================
+
 OUTPUT_DIR = BASE_DIR / "output"
+
 SCREENSHOTS_DIR = BASE_DIR / "screenshots"
+
 LOGS_DIR = BASE_DIR / "logs"
