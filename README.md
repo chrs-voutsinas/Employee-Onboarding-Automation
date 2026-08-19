@@ -24,6 +24,7 @@ The project automates employee creation in OrangeHRM using employee data from CS
 - Automated unit tests with pytest
 - GitLab CI automated test pipeline
 - Modular project architecture
+- Process Design Document (PDD)
 
 ## Project Structure
 
@@ -72,6 +73,7 @@ Employee Onboarding Automation/
 ├── .gitignore
 ├── .gitlab-ci.yml
 ├── main.py
+├── PDD.md
 ├── README.md
 └── requirements.txt
 ```
@@ -199,18 +201,18 @@ python main.py
 
 The automation will:
 
-1. Load configuration and credentials
-2. Read and validate employee input
-3. Launch the browser
-4. Log in to OrangeHRM
-5. Process each employee
-6. Retry temporary failures when applicable
-7. Capture screenshots for final browser-processing failures
-8. Generate a formatted Excel result report
-9. Generate run summary metrics
-10. Send an HTML email report when email reporting is enabled
-11. Attach the Excel report to the email
-12. Write execution details to the log
+1. Load configuration and credentials.
+2. Read and validate employee input.
+3. Launch the browser.
+4. Log in to OrangeHRM.
+5. Process each employee.
+6. Retry temporary failures when applicable.
+7. Capture screenshots for final browser-processing failures.
+8. Generate a formatted Excel result report.
+9. Generate run summary metrics.
+10. Send an HTML email report when email reporting is enabled.
+11. Attach the Excel report to the email.
+12. Write execution details to the log.
 
 Email delivery is handled separately from the core employee-processing flow. If email delivery fails, the completed employee processing and generated Excel report remain unaffected, and the email failure is recorded in the execution log.
 
@@ -258,7 +260,7 @@ This allows the recipient to review the run directly from the email while retain
 
 ## Technical Diagnostics
 
-Technical execution information is kept separate from the business-facing report.
+Technical execution information is kept separate from the business-facing output.
 
 Failed browser-processing scenarios can generate screenshots inside:
 
@@ -295,7 +297,7 @@ The automated tests cover:
 - Run summary calculations
 - Empty run summary handling
 - HTML email report generation
-- Email failure information
+- Failure information in email reports
 - HTML escaping of report data
 - Excel report creation
 - Business-facing Excel columns
@@ -320,6 +322,29 @@ A JUnit test report is also generated and uploaded as a GitLab pipeline artifact
 
 This provides automatic verification that the tested application logic continues to work after repository changes.
 
+## Process Documentation
+
+A Process Design Document (PDD) is included in the repository:
+
+```text
+PDD.md
+```
+
+The document describes:
+
+- Business objective
+- Process flow
+- Input validation
+- Transaction handling
+- Retry behavior
+- Exception handling
+- Business reporting
+- Technical diagnostics
+- Security and configuration
+- Testing and quality assurance
+
+The PDD is maintained alongside the application so that the documented process reflects the implemented automation.
+
 ## Status
 
-In Progress 🚧
+Implemented and tested

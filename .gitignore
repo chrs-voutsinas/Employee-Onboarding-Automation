@@ -10,6 +10,9 @@ __pycache__/
 *.py[cod]
 *.pyo
 
+# Pytest cache
+.pytest_cache/
+
 # Virtual Environment
 .venv/
 venv/
@@ -34,4 +37,4 @@ output/
 # ===========================
 # VS Code
 # ===========================
-.vscode/settings.json
+.vscode/
