@@ -29,7 +29,7 @@ PAUSE_BEFORE_EXIT = True
 # EMAIL REPORT SETTINGS
 # ============================================================
 
-SEND_EMAIL_REPORT = True
+SEND_EMAIL_REPORT = False
 
 EMAIL_SUBJECT = "Employee Onboarding Automation Report"
 

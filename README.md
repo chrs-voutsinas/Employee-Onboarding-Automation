@@ -119,6 +119,8 @@ REPORT_RECIPIENT_EMAIL=recipient_email_address
 
 The `.env` file is excluded from Git through `.gitignore`.
 
+Each user should configure their own local credentials. Real credentials and SMTP passwords should never be committed to the repository.
+
 ### Email Configuration
 
 Email reporting uses Gmail SMTP.
@@ -129,7 +131,15 @@ Email reporting uses Gmail SMTP.
 
 `REPORT_RECIPIENT_EMAIL` defines the recipient of the automation report. This can be changed without modifying the Python code.
 
-Email reporting can be enabled or disabled in `config/settings.py`:
+Email reporting is disabled by default:
+
+```python
+SEND_EMAIL_REPORT = False
+```
+
+This allows the core automation to run without requiring SMTP credentials.
+
+To enable email reporting, configure your own SMTP credentials in the local `.env` file and change the setting in `config/settings.py`:
 
 ```python
 SEND_EMAIL_REPORT = True
@@ -179,7 +189,7 @@ TEST_FAILURE = False
 TEST_RETRY = False
 HEADLESS = False
 PAUSE_BEFORE_EXIT = True
-SEND_EMAIL_REPORT = True
+SEND_EMAIL_REPORT = False
 ```
 
 Retry behavior is configurable through:
@@ -214,7 +224,9 @@ The automation will:
 11. Attach the Excel report to the email.
 12. Write execution details to the log.
 
-Email delivery is handled separately from the core employee-processing flow. If email delivery fails, the completed employee processing and generated Excel report remain unaffected, and the email failure is recorded in the execution log.
+Email delivery is handled separately from the core employee-processing flow. If email reporting is disabled, the employee-processing workflow and Excel reporting continue to operate normally.
+
+If email delivery is enabled but fails, the completed employee processing and generated Excel report remain unaffected, and the email failure is recorded in the execution log.
 
 ## Excel Report
 
