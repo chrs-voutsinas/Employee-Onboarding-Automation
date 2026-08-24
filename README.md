@@ -22,6 +22,7 @@ The project automates employee creation in OrangeHRM using employee data from CS
 - Excel report attachment
 - Run summary metrics
 - Automated unit tests with pytest
+- Continuous Integration with GitHub Actions
 - GitLab CI automated test pipeline
 - Modular project architecture
 - Process Design Document (PDD)
@@ -31,14 +32,17 @@ The project automates employee creation in OrangeHRM using employee data from CS
 ```text
 Employee Onboarding Automation/
 │
+├── .github/
+│   └── workflows/
+│       └── tests.yml
+│
 ├── config/
 │   └── settings.py
 │
 ├── input/
 │   ├── employees.csv
 │   ├── employees_validation_test.csv
-│   ├── employees_header_test.csv
-│   └── employees_empty_test.csv
+│   └── employees_header_test.csv
 │
 ├── logs/
 ├── output/
@@ -171,14 +175,10 @@ Available demo switches include:
 ```python
 USE_VALIDATION_TEST_INPUT = False
 USE_HEADER_TEST_INPUT = False
-USE_EMPTY_TEST_INPUT = False
-
 TEST_FAILURE = False
 TEST_RETRY = False
-
 HEADLESS = False
 PAUSE_BEFORE_EXIT = True
-
 SEND_EMAIL_REPORT = True
 ```
 
@@ -286,7 +286,7 @@ Run the complete test suite from the project root:
 python -m pytest -v
 ```
 
-The automated tests cover:
+The current test suite contains **20 automated tests** covering:
 
 - Employee input validation
 - CSV header validation
@@ -308,9 +308,35 @@ The unit tests run independently of the browser, allowing core Python logic to b
 
 ## Continuous Integration
 
-The project uses GitLab CI for automated testing.
+Automated testing is integrated with both **GitHub Actions** and **GitLab CI**.
 
-The pipeline is configured through:
+The same pytest test suite is executed in clean CI environments to verify that application logic continues to work after repository changes.
+
+### GitHub Actions
+
+The GitHub Actions workflow is configured through:
+
+```text
+.github/workflows/tests.yml
+```
+
+The workflow runs automatically on:
+
+- Pushes to the `master` branch
+- Pull requests targeting the `master` branch
+
+The workflow:
+
+1. Checks out the repository.
+2. Sets up Python 3.12.
+3. Installs the project dependencies.
+4. Runs the complete pytest test suite.
+
+This provides automatic verification directly within the GitHub repository whenever relevant code changes are pushed or proposed.
+
+### GitLab CI
+
+GitLab CI is configured through:
 
 ```text
 .gitlab-ci.yml
@@ -320,7 +346,7 @@ When changes are pushed to the GitLab repository, the CI pipeline creates a clea
 
 A JUnit test report is also generated and uploaded as a GitLab pipeline artifact.
 
-This provides automatic verification that the tested application logic continues to work after repository changes.
+Maintaining CI configurations for both platforms demonstrates that the automated test suite can be executed independently of the developer's local environment.
 
 ## Process Documentation
 
